@@ -1,6 +1,6 @@
 # Week 5: OpenROAD Flow Setup and Floorplan + Placement 
  
-The focus of this week is to understand Physical Design, Floorplanning, Placement, and then getting introduced to OpenROAD and running the scripts for Floorplanning and Placement.
+The focus of this week is to step into the physical design phase of the VSDBabySoC and understand how a synthesized netlist is transformed into a real, manufacturable layout. We begin by exploring the fundamentals of floorplanning—defining the chip’s physical boundaries, setting core utilization, choosing aspect ratios, and planning macro and I/O placement. Next, we study placement, where standard cells are arranged to optimize timing, wirelength, and congestion. This week also introduces the OpenROAD Flow Scripts (ORFS), covering their structure, key tools, and the process of setting up and running the flow for floorplanning and placement. Through installation, debugging, and hands-on execution of the flow, Week 5 establishes the foundation for routing, timing closure, and full RTL-to-GDS implementation in the upcoming stages. 
 
 ---
 
@@ -10,12 +10,14 @@ The focus of this week is to understand Physical Design, Floorplanning, Placemen
 [2. Introduction to OpenROAD Flow Scripts (ORFS)](#2-introduction-to-openroad-flow-scripts-orfs)<br>
 [3. Introduction to Floorplanning](#3-introduction-to-floorplanning)<br>
 [4. Introduction to Placement](#4-introduction-to-placement)<br>
-[5. Installation of OpenROAD]()<br>
+[5. Installation of OpenROAD](#5-installation-of-openroad)<br>
+[6. ORFS Directory Structure](#6-orfs-directory-structure)<br>
+[⚠️ Challenges](#%EF%B8%8F-challenges)<br>
+[🏁 Final Remarks](#-final-remarks)
 
 ---
 
 ## 📋 Prerequisites
-- Basic understanding of Verilog codes.
 - Basic understanding of Linux commands.
 
 ---
@@ -161,21 +163,170 @@ Placement is the stage in physical design where all standard cells are assigned 
 
 ## 5. Installation of OpenROAD
 
-I am currently facing some errors in the installation process of OpenROAD. I am trying to debug the issues and complete the installation steps as soon as possible. The entire installation steps, along with the subsequent steps after installation, will be documented as soon as I resolve my issues. Also, a detailed report on the problems arised will also be made available. I regret not being able to submit the entire repo on time, please consider my submission for this time. 
+### <ins>1. Clone the OpenROAD Flow Repository</ins>
+```
+# Pull the entire OpenROAD flow repo along with all its submodules so the full toolchain arrives complete.
+git clone --recursive https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts
+
+# Enter the Project Directory
+cd OpenROAD-flow-scripts
+```
+
+<div align="center">
+  <img src="Images/1.png" alt="Alt Text" width="1000"/>
+</div>
+<div align="center">
+  <img src="Images/2.png" alt="Alt Text" width="1000"/>
+</div>
+
+### <ins>2. Run the OpenROAD Setup Script</ins>
+```
+# Execute the automated setup script with admin rights to install all required dependencies and build the OpenROAD toolchain.
+sudo ./setup.sh
+```
+
+### <ins>3. Build OpenROAD Locally</ins>
+```
+# Compile the OpenROAD binaries inside the project directory without installing them system-wide.
+./build_openroad.sh --local
+```
+
+<div align="center">
+  <img src="Images/3.png" alt="Alt Text" width="1000"/>
+</div>
+
+### <ins>4. Verify Installation</ins>
+```
+# Activate the environment variables and paths needed for Yosys, OpenROAD, and other tools.
+source ./env.sh
+
+# Verify Yosys Installation
+yosys -help
+
+# Verify OpenROAD Installation
+openroad -help
+```
+
+<div align="center">
+  <img src="Images/4.png" alt="Alt Text" width="1000"/>
+</div>
+<div align="center">
+  <img src="Images/5.png" alt="Alt Text" width="1000"/>
+</div>
+
+### <ins>5. Build the Default Flow</ins>
+```
+# Switch into the flow folder where the OpenROAD automation scripts and Makefiles live.
+cd flow
+
+# Launches the full default OpenROAD flow using the provided Makefile.
+make
+```
+
+<div align="center">
+  <img src="Images/6.png" alt="Alt Text" width="1000"/>
+</div>
+<div align="center">
+  <img src="Images/7.png" alt="Alt Text" width="1000"/>
+</div>
+
+### <ins>6. Launch the Final Layout in GUI Mode</ins>
+```
+# Open the final routed design in the OpenROAD GUI so you can visually inspect the layout, placement, routing, and DRC status.
+make gui_final
+```
+<div align="center">
+  <img src="Images/8.png" alt="Alt Text" width="1000"/>
+</div>
+
+---
+
+## 6. ORFS Directory Structure
+```
+OpenROAD-flow-scripts
+├── bazel                     -> Bazel build configuration files for OpenROAD components
+├── build_openroad.log        -> Log output from the OpenROAD build process
+├── build_openroad.sh         -> Script to build OpenROAD binaries (local/system-wide)
+├── dependencies              -> Metadata and helper scripts for dependency management
+├── dev_env.sh                -> Developer-centric environment setup script
+├── Dockerfile                -> Docker setup to containerize the entire flow environment
+├── docker                    -> Docker helper scripts, images, and CI-related configurations
+├── docs                      -> Official documentation for the flow and tool usage
+├── env.sh                    -> Environment file that configures paths for tools like Yosys, OpenROAD, etc.
+├── etc                       -> Dependency installer scripts, utility configs, and support files
+├── flake.nix                 -> Nix package specification for reproducible builds
+├── flake.lock                -> Lockfile ensuring deterministic Nix environment versions
+├── flow                      -> Main RTL-to-GDS flow automation directory
+│    ├── BUILD.bazel          -> Bazel build rules for the entire flow
+│    ├── designs              -> Example SoC and design folders for running RTL-to-GDS flows
+│    ├── logs                 -> Log files generated during each flow stage
+│    ├── Makefile             -> The automation engine that drives synthesis, PnR, routing, signoff, etc.
+│    ├── objects              -> Intermediate build artifacts generated during flow execution
+│    ├── platforms            -> Process design kits (PDKs), tech LEFs, GDS, Liberty files, and node-specific data
+│    ├── reports              -> Reports generated by synthesis, floorplan, placement, routing, STA, etc.
+│    ├── results              -> Final outputs including DEF, GDS, SPEF, netlists, and extracted data
+│    ├── scripts              -> TCL and shell scripts that implement each step of the flow
+│    ├── test                 -> Test designs and flow validation utilities
+│    ├── tutorials            -> Learning resources and guided examples for new users
+│    └── util                 -> Helper utilities used across multiple flow stages
+├── jenkins                   -> CI regression tests and build verification scripts
+├── LICENSE_BUILD_RUN_SCRIPTS -> License information for build/run utilities
+├── MODULE.bazel              -> Bazel module configuration
+├── MODULE.bazel.lock         -> Lockfile for Bazel module dependencies
+├── README.md                 -> Top-level documentation and intro to ORFS
+├── setup.sh                  -> Interactive setup script for installing tools and dependencies
+├── tclint.toml               -> TCL linter configuration for code quality checks
+├── tools                     -> All required EDA tools packaged for running the flow
+├── WORKSPACE.bazel           -> Root Bazel workspace definition
+└── yamlfix.toml              -> YAML linter configuration for maintaining consistent formatting
+```
 
 ---
 
 ## ⚠️ Challenges
+### <ins>1. OpenROAD Build Failure at 67–69% Completion</ins>
+
+- **Problem:** While executing the command `./build_openroad.sh --local` during the OpenROAD installation, the build process consistently failed at around 67–69% progress. The compilation terminated with a build-failure message, preventing the installation from completing.
+  <div align="center">
+    <img src="Images/9.png" alt="Alt Text" width="1000"/>
+  </div>
+
+- **Causes:** Through detailed debugging and log analysis, the issue was traced to a lack of available disk space in the virtual machine. The VM had been allocated only 50 GB, most of which was already consumed by earlier tool installations and extracted dependencies. As the build process required additional space for intermediate binaries, caches, and object files, it repeatedly failed at the same stage.
+- **Solution:** The problem was resolved by increasing the VM’s disk capacity from 50 GB to 75 GB. After expanding the storage and re-running the build script, the installation proceeded the 67-69% mark successfully, confirming that insufficient disk space was the root cause.
+
+### <ins>2. Build Failure at 94% During Final Compilation Stage</ins>
+
+- **Problem:** Near the end of the installation, the OpenROAD build process failed again—this time at around 94% completion. The error logs did not provide an immediately clear explanation, and the build consistently terminated during the final compilation and test-linking stage. Even after retrying, the process failed at the same point.
+  <div align="center">
+    <img src="Images/10.png" alt="Alt Text" width="1000"/>
+  </div>
+
+- **Causes:** Although the error message itself was not fully conclusive, the failure pattern suggested issues related to resource contention during the final linking and test-generation phase. At this stage, OpenROAD typically compiles a large set of test binaries and performs heavy linking operations, which can trigger problems when:
+  * Multiple threads compete for limited CPU, RAM, or I/O bandwidth.
+  * Test suites attempt to build components that require additional libraries or system configurations not present in minimal setups.
+  * The VM environment lacks the overhead needed for parallelized test builds.
+  * Running tests consumes resources that slow or block the primary build process.
+  
+  In short, the combination of parallel builds + enabled tests can overload lightweight or constrained environments such as VMs.
+- **Solution:** After consultations with peers, the build was re-attempted using:
+  ```
+  ./build_openroad.sh --local --threads 1 --openroad-args "-DENABLE_TESTS=OFF"
+  ```
+
+  This approach:
+  * Disables the test suite, avoiding the resource-heavy final compilation of test binaries.
+  * Limits the build to a single thread, reducing CPU and memory contention during linking.
+  * Simplifies the build process, making it more VM-friendly.
+  
+  With these adjustments, the installation completed successfully without further failures.
 
 ---
 
 ## 🏁 Final Remarks
 
+Week 5 marked the transition from logical design to its physical realization. By exploring floorplanning and placement, and setting up the OpenROAD Flow Scripts, this week established the groundwork for turning a synthesized netlist into an actual chip layout. Key ideas such as core sizing, aspect ratio, utilization, and placement optimization highlighted how early physical decisions shape timing, congestion, and overall layout quality.
 
+Despite a few installation challenges, resolving them strengthened debugging skills and ensured a stable environment for the full PnR flow. With ORFS successfully configured, the design is now ready to move into routing, timing closure, and deeper physical verification in the coming weeks.
 
-
-
-
-
-
-
+>[!IMPORTANT]
+> For easy navigation to all the weeks of the program, please visit the [Master Repository](https://github.com/BitopanBaishya/VSD-Tapeout-Program-2025.git).
